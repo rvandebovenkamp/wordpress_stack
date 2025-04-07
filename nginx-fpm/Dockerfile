@@ -1,7 +1,7 @@
 FROM php:8.3-fpm
 
-# Install necessary dependencies
-RUN apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
     curl \
@@ -11,11 +11,13 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     libwebp-dev \
     libfreetype6-dev \
-    zip \
+    libzip-dev \
+    libonig-dev \
+    build-essential \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get purge -y build-essential \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
@@ -34,7 +36,7 @@ ADD nginx/site.conf /etc/nginx/sites-available/default
 ADD nginx/multisite-subdomain.conf /etc/nginx/sites-available/multisite-subdomain.conf
 ADD nginx/multisite-subdirectory.conf /etc/nginx/sites-available/multisite-subdirectory.conf
 
-# Enable Nginx site configuration
+# Enable Nginx site
 RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Set up directories
