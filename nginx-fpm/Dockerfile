@@ -1,5 +1,8 @@
 FROM php:8.3-fpm-alpine
 
+FROM php:8.3-fpm-alpine
+
+# Install essential packages and PHP extensions
 RUN apk update && apk add --no-cache \
     nginx \
     bash \
@@ -7,7 +10,17 @@ RUN apk update && apk add --no-cache \
     tar \
     gzip \
     supervisor \
-    mysql-client
+    mysql-client \
+    coreutils \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    freetype-dev \
+    zip \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache
+
 
 ADD https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar /usr/local/bin/wp
 
