@@ -24,38 +24,35 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Add ComputeStacks WordPress plugin
-ADD https://codeload.github.com/ComputeStacks/cs-wp-plugin/tar.gz/refs/heads/main /tmp/cswp.tar.gz
+# Setup WordPress
+RUN mkdir -p /usr/src/wordpress \
+    && wp core download --allow-root --path=/usr/src/wordpress \
+    && chown -R www-data:www-data /usr/src/wordpress
 
-# Copy scripts and configurations
-ADD scripts/find-wordpress.sh /usr/local/bin/find-wordpress-installation
-ADD startup/ /etc/my_init.d/
-ADD conf/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
-ADD nginx/nginx.conf /etc/nginx/nginx.conf
-ADD nginx/site.conf /etc/nginx/sites-available/default
-ADD nginx/multisite-subdomain.conf /etc/nginx/sites-available/multisite-subdomain.conf
-ADD nginx/multisite-subdirectory.conf /etc/nginx/sites-available/multisite-subdirectory.conf
+# Copy configuration files and scripts
+COPY conf/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/site.conf /etc/nginx/sites-available/default
+COPY scripts/find-wordpress.sh /usr/local/bin/find-wordpress-installation
+COPY startup/ /etc/my_init.d/
 
 # Enable Nginx site
-RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+RUN mkdir -p /etc/nginx/sites-enabled \
+    && ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 # Set up directories
 RUN mkdir -p /var/log/php \
     && mkdir -p /var/run/nginx-cache \
-    && mkdir -p /var/www/logs
+    && mkdir -p /var/www/logs \
+    && chown -R www-data:www-data /var/www/logs /var/run/nginx-cache
 
-# Set permissions and setup WordPress
+# Set permissions
 RUN chmod +x /usr/local/bin/find-wordpress-installation \
-    && chmod +x /etc/my_init.d/*.sh \
-    && mkdir -p /usr/src/wordpress \
-    && wp core download --allow-root --path=/usr/src/wordpress \
-    && chown -R www-data:www-data /usr/src/wordpress \
-    && tar -xzvf /tmp/cswp.tar.gz -C /opt \
-    && mv /opt/cs-wp-plugin-main /opt/cs-wordpress-plugin-main \
-    && rm -f /tmp/cswp.tar.gz \
-    && chown -R www-data:www-data /opt/cs-wordpress-plugin-main \
-    && chown -R www-data:www-data /var/run/nginx-cache \
-    && chown -R www-data:www-data /var/www/logs
+    && chmod +x /etc/my_init.d/*.sh
 
-# Start services using supervisor
-CMD ["/usr/bin/supervisord", "-n"]
+# Supervisor configuration (PHP-FPM and Nginx)
+RUN mkdir -p /var/log/supervisor
+RUN echo "[supervisord]\nnodaemon=true\n\n[program:php-fpm]\ncommand=/usr/local/sbin/php-fpm --nodaemonize\n\n[program:nginx]\ncommand=/usr/sbin/nginx -g 'daemon off;'" \
+    > /etc/supervisor/conf.d/supervisord.conf
+
+CMD ["/usr/bin/supervisord"]
