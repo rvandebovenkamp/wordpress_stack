@@ -16,8 +16,11 @@ RUN apk update && apk add --no-cache \
     freetype-dev \
     zip \
     unzip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache
+    build-base autoconf \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+  && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache \
+  && apk del build-base autoconf \
+  && rm -rf /var/cache/apk/*
 
 # Install WP-CLI correctly
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
