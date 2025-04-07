@@ -1,19 +1,9 @@
 FROM php:8.3-fpm
 
-# Install system dependencies
+# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx \
-    supervisor \
-    curl \
-    unzip \
-    default-mysql-client \
-    libpng-dev \
-    libjpeg-dev \
-    libwebp-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libonig-dev \
-    build-essential \
+    nginx supervisor curl unzip default-mysql-client \
+    libpng-dev libjpeg-dev libwebp-dev libfreetype6-dev libzip-dev libonig-dev build-essential \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache \
     && apt-get purge -y build-essential \
@@ -24,12 +14,7 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Setup WordPress
-RUN mkdir -p /usr/src/wordpress \
-    && wp core download --allow-root --path=/usr/src/wordpress \
-    && chown -R www-data:www-data /usr/src/wordpress
-
-# Copy configuration files and scripts
+# Copy configurations and scripts
 COPY conf/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/site.conf /etc/nginx/sites-available/default
@@ -50,9 +35,13 @@ RUN mkdir -p /var/log/php \
 RUN chmod +x /usr/local/bin/find-wordpress-installation \
     && chmod +x /etc/my_init.d/*.sh
 
-# Supervisor configuration (PHP-FPM and Nginx)
+# Supervisor configuration
 RUN mkdir -p /var/log/supervisor
 RUN echo "[supervisord]\nnodaemon=true\n\n[program:php-fpm]\ncommand=/usr/local/sbin/php-fpm --nodaemonize\n\n[program:nginx]\ncommand=/usr/sbin/nginx -g 'daemon off;'" \
     > /etc/supervisor/conf.d/supervisord.conf
 
-CMD ["/usr/bin/supervisord"]
+# WordPress setup at startup (ensures wp-cli runs when container is up)
+COPY startup-wordpress.sh /usr/local/bin/startup-wordpress.sh
+RUN chmod +x /usr/local/bin/startup-wordpress.sh
+
+CMD ["/usr/local/bin/startup-wordpress.sh"]
