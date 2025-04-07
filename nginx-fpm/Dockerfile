@@ -1,28 +1,23 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-fpm
 
-# Install essential packages and PHP extensions
-RUN apk update && apk add --no-cache \
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y \
     nginx \
-    bash \
-    curl \
-    tar \
-    gzip \
     supervisor \
-    mysql-client \
-    coreutils \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    libwebp-dev \
-    freetype-dev \
-    zip \
+    curl \
     unzip \
-    build-base autoconf \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-  && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache \
-  && apk del build-base autoconf \
-  && rm -rf /var/cache/apk/*
+    mysql-client \
+    libpng-dev \
+    libjpeg-dev \
+    libwebp-dev \
+    libfreetype6-dev \
+    zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) gd mysqli pdo_mysql zip opcache \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install WP-CLI correctly
+# Install WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
@@ -35,11 +30,14 @@ ADD scripts/find-wordpress.sh /usr/local/bin/find-wordpress-installation
 ADD startup/ /etc/my_init.d/
 ADD conf/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
 ADD nginx/nginx.conf /etc/nginx/nginx.conf
-ADD nginx/site.conf /etc/nginx/http.d/default.conf
-ADD nginx/multisite-subdomain.conf /etc/nginx/http.d/multisite-subdomain.conf
-ADD nginx/multisite-subdirectory.conf /etc/nginx/http.d/multisite-subdirectory.conf
+ADD nginx/site.conf /etc/nginx/sites-available/default
+ADD nginx/multisite-subdomain.conf /etc/nginx/sites-available/multisite-subdomain.conf
+ADD nginx/multisite-subdirectory.conf /etc/nginx/sites-available/multisite-subdirectory.conf
 
-# Set up required directories
+# Enable Nginx site configuration
+RUN ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+# Set up directories
 RUN mkdir -p /var/log/php \
     && mkdir -p /var/run/nginx-cache \
     && mkdir -p /var/www/logs
@@ -57,5 +55,5 @@ RUN chmod +x /usr/local/bin/find-wordpress-installation \
     && chown -R www-data:www-data /var/run/nginx-cache \
     && chown -R www-data:www-data /var/www/logs
 
-# Supervisor (if required)
+# Start services using supervisor
 CMD ["/usr/bin/supervisord", "-n"]
