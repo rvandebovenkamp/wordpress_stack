@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     curl \
     unzip \
-    mysql-client \
+    default-mysql-client \
     libpng-dev \
     libjpeg-dev \
     libwebp-dev \
