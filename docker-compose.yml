@@ -22,7 +22,7 @@ services:
       WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
     labels:
       traefik.enable: "true"
-      traefik.http.routers.wordpress.rule: Host(`${DOMAIN_NAME}`)
+      traefik.http.routers.wordpress.rule: ${ROUTER_RULE}
       traefik.http.routers.wordpress.entrypoints: websecure
       traefik.http.routers.wordpress.tls: "true"
       traefik.http.routers.wordpress.tls.certresolver: ${CERT_RESOLVER}
