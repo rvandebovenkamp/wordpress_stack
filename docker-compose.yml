@@ -6,7 +6,6 @@ services:
       context: ./nginx-fpm
       args:
         php_version: "8.3"
-    container_name: wordpress
     restart: unless-stopped
     depends_on:
       - mariadb
@@ -31,7 +30,6 @@ services:
 
   mariadb:
     image: mariadb:11
-    container_name: mariadb
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
