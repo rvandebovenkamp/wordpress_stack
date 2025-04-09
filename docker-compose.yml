@@ -11,18 +11,18 @@ services:
     depends_on:
       - mariadb
     volumes:
-      - wordpress_data:/var/www/html
+      - wordpress_data_${DOMAIN_NAME}:/var/www/html
     networks:
-      - web
+      - traefik
       - internal
     environment:
-      WORDPRESS_DB_HOST: mariadb
+      WORDPRESS_DB_HOST: mariadb_${DOMAIN_NAME}
       WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
       WORDPRESS_DB_USER: ${MYSQL_USER}
       WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
     labels:
       traefik.enable: "true"
-      traefik.http.routers.wordpress.rule: Host(`${DOMAIN_NAME}`)
+      traefik.http.routers.wordpress.rule: Host(`${DOMAIN_NAME}`) || Host(`www.${DOMAIN_NAME}`)
       traefik.http.routers.wordpress.entrypoints: websecure
       traefik.http.routers.wordpress.tls: "true"
       traefik.http.routers.wordpress.tls.certresolver: ${CERT_RESOLVER}
@@ -38,16 +38,16 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mariadb_data_${DOMAIN_NAME}:/var/lib/mysql
     networks:
       - internal
 
 volumes:
-  wordpress_data:
-  mariadb_data:
+  wordpress_data_${DOMAIN_NAME}:
+  mariadb_data_${DOMAIN_NAME}:
 
 networks:
-  web:
+  traefik:
     external: true
   internal:
     driver: bridge
