@@ -6,23 +6,23 @@ services:
       context: ./nginx-fpm
       args:
         php_version: "8.3"
-    container_name: wordpress_${DOMAIN_NAME}
+    container_name: wordpress
     restart: unless-stopped
     depends_on:
       - mariadb
     volumes:
       - wordpress_data:/var/www/html
     networks:
-      - traefik
+      - web
       - internal
     environment:
-      WORDPRESS_DB_HOST: mariadb_${DOMAIN_NAME}
+      WORDPRESS_DB_HOST: mariadb
       WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
       WORDPRESS_DB_USER: ${MYSQL_USER}
       WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
     labels:
       traefik.enable: "true"
-      traefik.http.routers.wordpress.rule: ${ROUTER_RULE}
+      traefik.http.routers.wordpress.rule: Host(`${DOMAIN_NAME}`)
       traefik.http.routers.wordpress.entrypoints: websecure
       traefik.http.routers.wordpress.tls: "true"
       traefik.http.routers.wordpress.tls.certresolver: ${CERT_RESOLVER}
@@ -30,7 +30,7 @@ services:
 
   mariadb:
     image: mariadb:11
-    container_name: mariadb_${DOMAIN_NAME}
+    container_name: mariadb
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -47,7 +47,7 @@ volumes:
   mariadb_data:
 
 networks:
-  traefik:
+  web:
     external: true
   internal:
     driver: bridge
