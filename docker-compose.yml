@@ -11,7 +11,7 @@ services:
     depends_on:
       - mariadb
     volumes:
-      - wordpress_data_${DOMAIN_NAME}:/var/www/html
+      - wordpress_data:/var/www/html
     networks:
       - traefik
       - internal
@@ -38,13 +38,13 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mariadb_data_${DOMAIN_NAME}:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
     networks:
       - internal
 
 volumes:
-  wordpress_data_${DOMAIN_NAME}:
-  mariadb_data_${DOMAIN_NAME}:
+  wordpress_data:
+  mariadb_data:
 
 networks:
   traefik:
