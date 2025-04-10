@@ -10,7 +10,7 @@ services:
     depends_on:
       - mariadb
     volumes:
-      - wordpress_data:/var/www/html
+      - ${SITE_SLUG}_wp_data:/var/www/html
     networks:
       - web
       - internal
@@ -41,7 +41,7 @@ services:
       MYSQL_USER: "${MYSQL_USER}"
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - ${SITE_SLUG}_db_data:/var/lib/mysql
     networks:
       - internal
     healthcheck:
@@ -51,8 +51,8 @@ services:
       retries: 5
 
 volumes:
-  wordpress_data:
-  mariadb_data:
+  ${SITE_SLUG}_wp_data:
+  ${SITE_SLUG}_db_data:
 
 networks:
   web:
