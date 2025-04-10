@@ -6,7 +6,9 @@ services:
       context: ./nginx-fpm
       args:
         php_version: "8.3"
-    restart: unless-stopped
+    ports:
+      - "80"
+    restart: unless-stopped 
     depends_on:
       - mariadb
     volumes:
