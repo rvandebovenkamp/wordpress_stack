@@ -39,6 +39,6 @@ volumes:
 
 networks:
   web:
-    external: true
+    driver: bridge
   internal:
     driver: bridge
