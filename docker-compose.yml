@@ -5,7 +5,7 @@ services:
     build:
       context: ./nginx-fpm
       args:
-        php_version: "8.4"
+        php_version: "8.3"
     restart: unless-stopped
     depends_on:
       - mariadb
@@ -19,6 +19,14 @@ services:
       WORDPRESS_DB_NAME: "${MYSQL_DATABASE}"
       WORDPRESS_DB_USER: "${MYSQL_USER}"
       WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${ROUTER_NAME}.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.${ROUTER_NAME}.entrypoints=websecure"
+      - "traefik.http.routers.${ROUTER_NAME}.tls=true"
+      - "traefik.http.routers.${ROUTER_NAME}.tls.certresolver=${CERT_RESOLVER}"
+      - "traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=80"
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
@@ -37,6 +45,11 @@ services:
       - ${SITE_SLUG}_db_data:/var/lib/mysql
     networks:
       - internal
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 3306 || (echo > /dev/tcp/127.0.0.1/3306)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   ${SITE_SLUG}_wp_data:
