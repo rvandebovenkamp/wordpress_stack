@@ -22,25 +22,18 @@ services:
     labels:
       - "traefik.enable=true"
 
-      # 🔁 Main app router (non-www only)
-      - "traefik.http.routers.${ROUTER_NAME}.rule=Host(`${DOMAIN}`)"
+      # Main router handling both www and non-www domains
+      - "traefik.http.routers.${ROUTER_NAME}.rule=HostRegexp(`{subdomain:.+}.${DOMAIN}`)"
       - "traefik.http.routers.${ROUTER_NAME}.entrypoints=websecure"
       - "traefik.http.routers.${ROUTER_NAME}.tls=true"
       - "traefik.http.routers.${ROUTER_NAME}.tls.certresolver=${CERT_RESOLVER}"
+      - "traefik.http.routers.${ROUTER_NAME}.middlewares=redirect-to-non-www"
       - "traefik.http.services.${SERVICE_NAME}.loadbalancer.server.port=80"
 
-      # 🌐 Additional router to match www subdomain
-      - "traefik.http.routers.${ROUTER_NAME}_www.rule=Host(`www.${DOMAIN}`) && PathPrefix(`/`)"
-      - "traefik.http.routers.${ROUTER_NAME}_www.entrypoints=websecure"
-      - "traefik.http.routers.${ROUTER_NAME}_www.tls=true"
-      - "traefik.http.routers.${ROUTER_NAME}_www.tls.certresolver=${CERT_RESOLVER}"
-      - "traefik.http.routers.${ROUTER_NAME}_www.middlewares=example-middleware"
-      - "traefik.http.routers.${ROUTER_NAME}_www.service=${SERVICE_NAME}"
-
-      # 🧠 Middleware to strip www and redirect to non-www
-      - "traefik.http.middlewares.example-middleware.redirectregex.regex=^(http|https)://www\\.(.+)"
-      - "traefik.http.middlewares.example-middleware.redirectregex.replacement=${1}://${2}"
-      - "traefik.http.middlewares.example-middleware.redirectregex.permanent=true"
+      # Middleware to redirect www to non-www
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.regex=^https?://www\\.(.+)"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.replacement=https://$1"
+      - "traefik.http.middlewares.redirect-to-non-www.redirectregex.permanent=true"
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
