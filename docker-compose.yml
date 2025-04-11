@@ -42,10 +42,11 @@ services:
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
     volumes:
       - ${SITE_SLUG}_db_data:/var/lib/mysql
+      - ./healthcheck.sh:/healthcheck.sh
     networks:
       - internal
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/3306"]
+      test: ["CMD", "/healthcheck.sh"]
       interval: 30s
       timeout: 10s
       retries: 5
