@@ -35,6 +35,7 @@ services:
       - "traefik.http.routers.${ROUTER_NAME}_www.tls=true"
       - "traefik.http.routers.${ROUTER_NAME}_www.tls.certresolver=${CERT_RESOLVER}"
       - "traefik.http.routers.${ROUTER_NAME}_www.middlewares=redirect-to-non-www"
+      - "traefik.http.routers.${ROUTER_NAME}_www.service=${SERVICE_NAME}"  # ✅ Added this line
 
       # Middleware for redirection
       - "traefik.http.middlewares.redirect-to-non-www.redirectregex.regex=^https?://www\\.(.*)"
