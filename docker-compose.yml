@@ -21,7 +21,7 @@ services:
       WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.${ROUTER_NAME}.rule=Host(${DOMAINS}) || Host(www.${DOMAINS})"
+      - "traefik.http.routers.${ROUTER_NAME}.rule=Host(`${DOMAINS}`) || Host(`www.${DOMAINS}`)"
       - "traefik.http.routers.${ROUTER_NAME}.entrypoints=websecure"
       - "traefik.http.routers.${ROUTER_NAME}.tls=true"
       - "traefik.http.routers.${ROUTER_NAME}.tls.certresolver=${CERT_RESOLVER}"
