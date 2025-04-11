@@ -45,11 +45,6 @@ services:
       - ${SITE_SLUG}_db_data:/var/lib/mysql
     networks:
       - internal
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 3306 || (echo > /dev/tcp/127.0.0.1/3306)"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
 volumes:
   ${SITE_SLUG}_wp_data:
